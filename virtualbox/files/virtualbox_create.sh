@@ -55,15 +55,17 @@ if [ ! -d ${base} ]; then
   exit 1
 fi
 
-echo "BUILD: creating VM"
+TMPLOG=$(mktemp /tmp/virtualbox_create.XXXXXXXXX)
+
+echo "BUILD: creating VM" | tee -a ${TMPLOG}
 # --- create base VM
 $SU "$VBOXMANAGE createvm --name "${name}" --ostype ${ostype} --register --basefolder ${base}"
 
-echo "BUILD: getting HDD template"
+echo "BUILD: getting HDD template" | tee -a ${TMPLOG}
 # --- get hdd template
 $SU "/usr/bin/rsync ${hddtemplate} ${base}/"
 
-echo "BUILD: uncompressing HDD template"
+echo "BUILD: uncompressing HDD template" | tee -a ${TMPLOG}
 $SU "gunzip -c ${base}/$(basename ${hddtemplate}) > ${hdd}"
 
 # --- change the UUID for the disk.
@@ -72,7 +74,7 @@ $SU "$VBOXMANAGE internalcommands sethduuid ${hdd}"
 # --- remove template disk.
 $SU "rm -f ${base}/$(basename ${hddtemplate})"
 
-echo "BUILD: configuring VM"
+echo "BUILD: configuring VM" | tee -a ${TMPLOG}
 # --- config sata, attach harddisk image.
 $SU "$VBOXMANAGE modifyvm "${name}" --sata on --sataportcount 4 --sataport1 "${hdd}""
 
@@ -100,7 +102,7 @@ $SU "$VBOXMANAGE guestproperty set ${name} /CP/hostname ${name}"
 $SU "$VBOXMANAGE guestproperty set ${name} /CP/build yes"
 $SU "$VBOXMANAGE guestproperty set ${name} /CP/status booting"
 
-echo "BUILD: starting VM"
+echo "BUILD: starting VM" | tee -a ${TMPLOG}
 $SU "$VBOXMANAGE startvm ${name} --type headless"
 
 sleep 5
@@ -125,14 +127,15 @@ while [ 1 ]
 do
   val=`getValue /CP/status`
   echo -en "BUILD STATUS: ${val}\r"
+  echo "BUILD STATUS: ${val}" >> ${TMPLOG}
   [ "$val" = "done" ] && break
-  sleep 2
+  sleep 3
 done
 
 echo
 
 ip=`getValue /VirtualBox/GuestInfo/Net/0/V4/IP`
 
-echo "BUILD: VM IP address: ${ip}"
+echo "BUILD: VM IP address: ${ip}" | tee -a ${TMPLOG}
 
-echo "BUILD: Complete."
+echo "BUILD: Complete." | tee -a ${TMPLOG}

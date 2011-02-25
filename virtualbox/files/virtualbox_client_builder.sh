@@ -79,10 +79,10 @@ setValue /CP/status setting_hostname
 
 # --- run puppet to configure the system
 setValue /CP/status updating_puppet
-yum -y update puppet
+yum -y -d1 update puppet
 
 setValue /CP/status running_puppet
-/etc/init.d/puppet once --test
+/etc/init.d/puppet once --test --color=false
 
 # --- remove vboxtemplate from the hosts file.
 setValue /CP/status cleaning_hosts

@@ -1,4 +1,4 @@
-# $Id: virtualbox_additions_version.rb 6305 2011-02-08 04:33:02Z $
+# $Id: virtualbox_additions_installed.rb 6364 2011-02-18 00:01:37Z benw $
 
 require 'thread'
 
@@ -9,7 +9,7 @@ if FileTest.exists?("/usr/bin/VBoxControl")
     output = %x{/usr/bin/VBoxControl --version}
     ver = output.chomp
     
-    Facter.add("virtualbox_additions_version") do
+    Facter.add("virtualbox_additions_installed") do
       confine :kernel => :Linux
       setcode do
         ver
